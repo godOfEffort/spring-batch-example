@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    hikari:
+      jdbc-url: jdbc:mysql://127.0.0.1:3306/bootex?characterEncoding=UTF-8&serverTimezone=UTC
+      username: bootuser
+      password: it0813
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  batch:
+    job:
+      names: ${job.name:NONE}
+    jdbc:
+      initialize-schema: never
