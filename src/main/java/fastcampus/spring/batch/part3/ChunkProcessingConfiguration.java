@@ -73,17 +73,18 @@ public class ChunkProcessingConfiguration {
     @Bean
     public Step taskBaseStep() {
         return stepBuilderFactory.get("taskBaseStep")
-                .tasklet(this.tasklet())
+                .tasklet(this.tasklet(null))
                 .build();
     }
 
-    public Tasklet tasklet() {
+    @Bean
+    @StepScope
+    public Tasklet tasklet(@Value("#{jobParameters[chunkSize]}") String value) {
         List<String> items = getItems();
         return (contribution, chunkContext) -> {
             StepExecution stepExecution = contribution.getStepExecution();
-            JobParameters jobParameters = stepExecution.getJobParameters();
-
-            String value = jobParameters.getString("chunkSize", "10");
+//            JobParameters jobParameters = stepExecution.getJobParameters();
+//            String value = jobParameters.getString("chunkSize", "10");
             int chunkSize = Objects.nonNull(value) ? Integer.parseInt(value) : 10;
             int fromIndex = stepExecution.getReadCount();
             int toIndex = fromIndex + chunkSize;
