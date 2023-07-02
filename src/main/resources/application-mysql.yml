@@ -5,8 +5,13 @@ spring:
       username: bootuser
       password: it0813
       driver-class-name: com.mysql.cj.jdbc.Driver
+
   batch:
     job:
       names: ${job.name:NONE}
     jdbc:
       initialize-schema: never
+  sql:
+    init:
+      data-locations: classpath*:person.sql
+      mode: never
