@@ -10,7 +10,9 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
@@ -20,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +34,13 @@ public class ItemWriterConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final DataSource dataSource;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public ItemWriterConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, DataSource dataSource) {
+    public ItemWriterConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory, DataSource dataSource, EntityManagerFactory entityManagerFactory) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.dataSource = dataSource;
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Bean
@@ -43,7 +48,8 @@ public class ItemWriterConfiguration {
         return this.jobBuilderFactory.get("itemWriterJob")
                 .incrementer(new RunIdIncrementer())
                 .start(this.csvItemWriterStep())
-                .next(this.jdbcBatchItemWriterStep())
+//                .next(this.jdbcBatchItemWriterStep())
+                .next(this.jpaItemWriterStep())
                 .build();
     }
 
@@ -54,6 +60,25 @@ public class ItemWriterConfiguration {
                 .reader(itemReader())
                 .writer(jdbcBatchItemWriter())
                 .build();
+    }
+
+    @Bean
+    public Step jpaItemWriterStep() throws Exception {
+        return stepBuilderFactory.get("jpaItemWriterStep")
+                .<Person, Person>chunk(10)
+                .reader(itemReader())
+                .writer(jpaItemWriter())
+                .build();
+    }
+
+    private ItemWriter<Person> jpaItemWriter() throws Exception {
+        JpaItemWriter<Person> itemWriter = new JpaItemWriterBuilder<Person>()
+                .entityManagerFactory(entityManagerFactory)
+//                .usePersist(true)
+                .build();
+
+        itemWriter.afterPropertiesSet();
+        return itemWriter;
     }
 
     private ItemWriter<Person> jdbcBatchItemWriter() {
@@ -106,7 +131,7 @@ public class ItemWriterConfiguration {
     private List<Person> getItems() {
         ArrayList<Person> items = new ArrayList<Person>();
         for (int i = 0; i < 100; i++) {
-            items.add(new Person(i+1, "test name " + i, "test age", "test address"));
+            items.add(new Person("test name " + i, "test age", "test address"));
         }
         return items;
     }
