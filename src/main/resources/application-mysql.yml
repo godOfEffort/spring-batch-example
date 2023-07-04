@@ -1,7 +1,7 @@
 spring:
   datasource:
     hikari:
-      jdbc-url: jdbc:mysql://127.0.0.1:3306/bootex?characterEncoding=UTF-8&serverTimezone=UTC
+      jdbc-url: jdbc:mysql://127.0.0.1:3306/bootex?characterEncoding=UTF-8&serverTimezone=UTC&rewriteBatchedStatements=true
       username: bootuser
       password: it0813
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -15,3 +15,6 @@ spring:
     init:
       data-locations: classpath*:person.sql
       mode: never
+  jpa:
+    hibernate:
+      ddl-auto: update
